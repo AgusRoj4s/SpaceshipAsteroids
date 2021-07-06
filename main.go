@@ -5,6 +5,7 @@ import (
 	"SpaceshipAsteroids/server/handler"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 )
@@ -25,6 +26,11 @@ func run() error {
 	r.HandleFunc("/topsecret_split/{satteliteName}", nil).Methods(http.MethodPost)
 	r.HandleFunc("/topsecret_split/{satteliteName}", nil).Methods(http.MethodGet)
 
-	log.Println("Listening on port 8080")
-	return http.ListenAndServe(":8080", r)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Println("Listening on port " + port)
+	return http.ListenAndServe(":"+port, r)
 }
