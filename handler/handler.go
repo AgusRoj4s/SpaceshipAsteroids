@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"SpaceshipAsteroids/server/communicator"
 )
 
@@ -64,11 +66,9 @@ func (h *Handler) GetSpaceshipCoordinates() http.HandlerFunc {
 func (h *Handler) GetSpaceshipCoordinatesByOne() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
-			Satellites struct {
-				Name     string   `json:"name"`
-				Distance float32  `json:"distance"`
-				Message  []string `json:"message"`
-			} `json:"satellites"`
+			Name     string   `json:"name"`
+			Distance float32  `json:"distance"`
+			Message  []string `json:"message"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -76,10 +76,12 @@ func (h *Handler) GetSpaceshipCoordinatesByOne() http.HandlerFunc {
 			return
 		}
 
+		params := mux.Vars(r)
+		nSatellite := params["satteliteName"]
 		var ss = communicator.Satellite{
-			Name:     body.Satellites.Name,
-			Distance: body.Satellites.Distance,
-			Message:  body.Satellites.Message,
+			Name:     nSatellite,
+			Distance: body.Distance,
+			Message:  body.Message,
 		}
 
 		coordinates, err := h.communicator.GetSpaceshipCoordinatesByOne(ss)

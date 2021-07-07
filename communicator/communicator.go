@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var storage = make([]Satellite, 3)
+var storage = make([]Satellite, 0)
 var count = 0
 
 type Communicator struct {
@@ -107,7 +107,6 @@ func (c *Communicator) GetSpaceshipCoordinates(satellites ...Satellite) (GetSpac
 
 func (c *Communicator) GetSpaceshipCoordinatesByOne(satellite Satellite) (GetSpaceshipCoordinatesResponse, error) {
 	storage = append(storage, satellite)
-
 	if len(storage) == 1 {
 		count++
 		return GetSpaceshipCoordinatesResponse{}, errors.New("could not calculate spaceship's coordinates. not enough information")
@@ -115,17 +114,7 @@ func (c *Communicator) GetSpaceshipCoordinatesByOne(satellite Satellite) (GetSpa
 
 	if len(storage) == 2 {
 		count++
-		x, y, err := c.getSpaceshipCoordinatesWithTwoDistances(storage[0], storage[1])
-		if err != nil {
-			return GetSpaceshipCoordinatesResponse{}, err
-		}
-		return GetSpaceshipCoordinatesResponse{
-			Position: struct {
-				X float32 `json:"x"`
-				Y float32 `json:"y"`
-			}{X: x, Y: y},
-			Message: getSpaceshipMessage(storage[0].Message, storage[1].Message),
-		}, nil
+		return GetSpaceshipCoordinatesResponse{}, errors.New("could not calculate spaceship's coordinates. not enough information")
 	}
 
 	if len(storage) == 3 {
@@ -142,7 +131,7 @@ func (c *Communicator) GetSpaceshipCoordinatesByOne(satellite Satellite) (GetSpa
 			Message: getSpaceshipMessage(storage[0].Message, storage[1].Message, storage[2].Message),
 		}, nil
 
-		storage = make([]Satellite, 3)
+		storage = make([]Satellite, 0)
 		count = 0
 	}
 	return GetSpaceshipCoordinatesResponse{}, errors.New("could not calculate spaceship's coordinates. not enough information")
@@ -172,32 +161,6 @@ func (c *Communicator) getSpaceshipCoordinatesWithThreeDistances(d1, d2, d3 floa
 	Mx := (C*E - B*F) / 2
 	My := (A*F - D*C) / 2
 	M := A*E - D*B
-
-	if M == 0 {
-		return 0, 0, errors.New("could not calculate the ship's coordinates")
-	}
-
-	x = Mx / M
-	y = My / M
-
-	return x, y, nil
-}
-
-func (c *Communicator) getSpaceshipCoordinatesWithTwoDistances(satellite1 Satellite, satellite2 Satellite) (x, y float32, err error) {
-	a, _ := c.satellites.getSatellite(satellite1.Name)
-	b, _ := c.satellites.getSatellite(satellite2.Name)
-
-	d1 := satellite1.Distance
-	d2 := satellite2.Distance
-
-	x1 := a.getX()
-	x2 := b.getX()
-	y1 := a.getY()
-	y2 := b.getY()
-
-	Mx := (x1*d2 - x2*d1)
-	My := (y1*d2 - y2*d1)
-	M := x1*y2 - x2*y1
 
 	if M == 0 {
 		return 0, 0, errors.New("could not calculate the ship's coordinates")
