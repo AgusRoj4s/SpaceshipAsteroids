@@ -23,8 +23,7 @@ func run() error {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/topsecret", h.GetSpaceshipCoordinates()).Methods(http.MethodPost)
-	r.HandleFunc("/topsecret_split/{satteliteName}", nil).Methods(http.MethodPost)
-	r.HandleFunc("/topsecret_split/{satteliteName}", nil).Methods(http.MethodGet)
+	r.HandleFunc("/topsecret_split/{satteliteName}", h.GetSpaceshipCoordinatesByOne()).Methods(http.MethodPost)
 
 	port := os.Getenv("PORT")
 	if port == "" {
