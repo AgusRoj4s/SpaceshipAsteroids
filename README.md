@@ -6,5 +6,7 @@ por defecto el host va a estar en el puerto 8080
 
 url del host: https://spaceship-asteroids.herokuapp.com/
 
+prueba con postman: ![Image text](https://github.com//AgusRoj4s/SpaceshipAsteroids/master/pruebaPostMan.JPG)
 
-prueba con postman: https://raw.githubusercontent.com/AgusRoj4s/SpaceshipAsteroids/master/pruebaPostMan.JPG
+
+
