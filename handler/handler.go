@@ -10,6 +10,7 @@ import (
 
 type Communicator interface {
 	GetSpaceshipCoordinates(satellites ...communicator.Satellite) (communicator.GetSpaceshipCoordinatesResponse, error)
+	GetSpaceshipCoordinatesByOne(satellite communicator.Satellite) (communicator.GetSpaceshipCoordinatesResponse, error)
 }
 
 type Handler struct {
@@ -45,6 +46,43 @@ func (h *Handler) GetSpaceshipCoordinates() http.HandlerFunc {
 		}
 
 		coordinates, err := h.communicator.GetSpaceshipCoordinates(ss...)
+		if err != nil {
+			prepareErr(w, http.StatusConflict, err.Error())
+			return
+		}
+
+		b, err := json.Marshal(coordinates)
+		if err != nil {
+			prepareErr(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		_, _ = w.Write(b)
+	}
+}
+
+func (h *Handler) GetSpaceshipCoordinatesByOne() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Satellites struct {
+				Name     string   `json:"name"`
+				Distance float32  `json:"distance"`
+				Message  []string `json:"message"`
+			} `json:"satellites"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			prepareErr(w, http.StatusUnprocessableEntity, fmt.Sprintf("could not process body: %v", err))
+			return
+		}
+
+		var ss = communicator.Satellite{
+			Name:     body.Satellites.Name,
+			Distance: body.Satellites.Distance,
+			Message:  body.Satellites.Message,
+		}
+
+		coordinates, err := h.communicator.GetSpaceshipCoordinatesByOne(ss)
 		if err != nil {
 			prepareErr(w, http.StatusConflict, err.Error())
 			return

@@ -6,6 +6,9 @@ import (
 	"strings"
 )
 
+var storage = make([]Satellite, 3)
+var count = 0
+
 type Communicator struct {
 	satellites satellites
 }
@@ -99,9 +102,50 @@ func (c *Communicator) GetSpaceshipCoordinates(satellites ...Satellite) (GetSpac
 			Message: getSpaceshipMessage(satellites[0].Message, satellites[1].Message, satellites[2].Message),
 		}, nil
 	}
-
 	return GetSpaceshipCoordinatesResponse{}, errors.New("could not calculate spaceship's coordinates. not enough information")
+}
 
+func (c *Communicator) GetSpaceshipCoordinatesByOne(satellite Satellite) (GetSpaceshipCoordinatesResponse, error) {
+	storage = append(storage, satellite)
+
+	if len(storage) == 1 {
+		count++
+		return GetSpaceshipCoordinatesResponse{}, errors.New("could not calculate spaceship's coordinates. not enough information")
+	}
+
+	if len(storage) == 2 {
+		count++
+		x, y, err := c.getSpaceshipCoordinatesWithTwoDistances(storage[0], storage[1])
+		if err != nil {
+			return GetSpaceshipCoordinatesResponse{}, err
+		}
+		return GetSpaceshipCoordinatesResponse{
+			Position: struct {
+				X float32 `json:"x"`
+				Y float32 `json:"y"`
+			}{X: x, Y: y},
+			Message: getSpaceshipMessage(storage[0].Message, storage[1].Message),
+		}, nil
+	}
+
+	if len(storage) == 3 {
+		x, y, err := c.getSpaceshipCoordinatesWithThreeDistances(storage[0].Distance, storage[1].Distance, storage[2].Distance)
+		if err != nil {
+			return GetSpaceshipCoordinatesResponse{}, err
+		}
+
+		return GetSpaceshipCoordinatesResponse{
+			Position: struct {
+				X float32 `json:"x"`
+				Y float32 `json:"y"`
+			}{X: x, Y: y},
+			Message: getSpaceshipMessage(storage[0].Message, storage[1].Message, storage[2].Message),
+		}, nil
+
+		storage = make([]Satellite, 3)
+		count = 0
+	}
+	return GetSpaceshipCoordinatesResponse{}, errors.New("could not calculate spaceship's coordinates. not enough information")
 }
 
 func (c *Communicator) getSpaceshipCoordinatesWithThreeDistances(d1, d2, d3 float32) (x, y float32, err error) {
@@ -139,17 +183,17 @@ func (c *Communicator) getSpaceshipCoordinatesWithThreeDistances(d1, d2, d3 floa
 	return x, y, nil
 }
 
-func (c *Communicator) getSpaceshipCoordinatesWithTwoDistances(d1, d2 float32) (x, y float32, err error) {
-	k, _ := c.satellites.getSatellite("Kenobi")
-	sk, _ := c.satellites.getSatellite("Skywalker")
+func (c *Communicator) getSpaceshipCoordinatesWithTwoDistances(satellite1 Satellite, satellite2 Satellite) (x, y float32, err error) {
+	a, _ := c.satellites.getSatellite(satellite1.Name)
+	b, _ := c.satellites.getSatellite(satellite2.Name)
 
-	d1 = 100
-	d2 = 200
+	d1 := satellite1.Distance
+	d2 := satellite2.Distance
 
-	x1 := k.getX()
-	x2 := sk.getX()
-	y1 := k.getY()
-	y2 := sk.getY()
+	x1 := a.getX()
+	x2 := b.getX()
+	y1 := a.getY()
+	y2 := b.getY()
 
 	Mx := (x1*d2 - x2*d1)
 	My := (y1*d2 - y2*d1)
